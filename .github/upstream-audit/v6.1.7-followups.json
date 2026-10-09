@@ -1,5 +1,11 @@
 [
   {
+    "path": "launcher/tests/update.test.cjs",
+    "baselineSha256": "0267c1d6d9912331eda799f3e81e26b8b6b7172b379301d50fdf28e9d0c8c7e7",
+    "currentSha256": "fa8175489cee78314f279422a23329fcf5921b317e3268d521de12bc4ca37af1",
+    "reason": "Keep the upstream Chromium redirect, cancellation, deadline and bounded retry assertions while binding expected assets to the PayOol repository. Exercise preview-only latest metadata HTTP 404 through the new ClientRequest transport, and reject redirected endpoint 404s as real errors."
+  },
+  {
     "path": "tests/chatgpt-web-models.test.ts",
     "baselineSha256": "d1e092a0132ca679a83d737ff72c18d4034214ce18382e0bf683be9e27a280b1",
     "currentSha256": "4d810ef50eac12d8325019cbcc3f1d1fb5e1602a785a589fb26b976736fa57f4",
