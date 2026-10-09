@@ -29,7 +29,7 @@ test('fresh provisioning needs no tools, accounts or pre-existing Codex config',
   assert.equal(settings.version, '2.81.0');
   assert.equal(fs.existsSync(settings.node), true);
   assert.equal(fs.existsSync(settings.npmCli), true);
-  assert.equal(fs.existsSync(f.options.codexHome), false);
+  assert.deepEqual(fs.readdirSync(f.options.codexHome), []);
   const config = f.read(path.join(settings.home, 'config.json'));
   assert.deepEqual(config.providers, {});
   assert.equal(config.clientIntegrations.codex, false);

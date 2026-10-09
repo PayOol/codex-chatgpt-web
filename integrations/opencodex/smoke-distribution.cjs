@@ -29,7 +29,11 @@ async function bridgeSmoke(settings, integration, env, scratch) {
   try {
     let healthy = false;
     for (let i = 0; i < 100; i++) {
-      if (child.exitCode !== null) throw Error('Isolated integrated bridge exited before health');
+      if (child.exitCode !== null) {
+        const detail = fs.readFileSync(path.join(scratch, 'bridge.log'), 'utf8').slice(-4000)
+          .replaceAll(config.controlToken, '[redacted]').replace(/Bearer\s+\S+/g, 'Bearer [redacted]');
+        throw Error('Isolated integrated bridge exited before health: ' + detail);
+      }
       try { const r = await fetch(endpoint + '/healthz', { signal: AbortSignal.timeout(500) }); if (r.ok && (await r.json()).pid === child.pid) { healthy = true; break; } } catch {}
       await pause(300);
     }

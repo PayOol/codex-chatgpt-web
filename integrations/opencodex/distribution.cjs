@@ -76,7 +76,8 @@ async function provision({ payload, coreHome, codexHome, bun, launcher }) {
   const sameCode = files.every(file => fs.existsSync(path.join(root, file)) && hash(path.join(root, file)) === hash(path.join(payload, 'code', file)));
   if (marker?.manifestHash === manifestHash && previous && sameCode
       && previous.bun === bun && previous.launcher === launcher
-      && fs.existsSync(path.join(previous.packageRoot, 'src/index.ts')) && fs.existsSync(previous.node)) return { root, installed: false };
+      && fs.existsSync(path.join(previous.packageRoot, 'src/index.ts')) && fs.existsSync(previous.node)
+      && fs.existsSync(codexHome)) return { root, installed: false };
   if (alive(path.join(root, 'owner.lock')) || alive(path.join(root, 'update.lock'))) throw Error('OpenCodex is in use. Keep this installation open and finish active tasks before upgrading.');
   const manifest = verifyPayload(payload);
   const home = previous?.home || path.join(root, 'state');
@@ -106,6 +107,10 @@ async function provision({ payload, coreHome, codexHome, bun, launcher }) {
   }
   const port = previous?.port || await freePort(10110);
   const dashboardPort = previous?.dashboardPort || await freePort(10100, [port]);
+  // OpenCodex resolves CODEX_HOME during module loading even in hub mode.
+  // A new user may not have run Codex yet; create only the directory, never
+  // a config.toml, account file or native-client integration.
+  fs.mkdirSync(codexHome, { recursive: true, mode: 0o700 });
   if (!fs.existsSync(configFile)) atomic(configFile, {
     hostname: '127.0.0.1', port, runtimeRole: 'hub',
     unauthenticatedLoopbackListener: { enabled: false },
