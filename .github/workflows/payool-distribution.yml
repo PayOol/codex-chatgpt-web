@@ -41,7 +41,15 @@ jobs:
           $env:CODEX_CHATGPT_WEB_BUN = (Get-Command bun).Source
           node integrations/opencodex/build-distribution.cjs
       - name: Verify clean-profile launch and official OpenCodex
-        run: node integrations/opencodex/smoke-distribution.cjs
+        run: |
+          # Only the disposable GitHub runner installs the candidate. Local
+          # smoke-distribution runs never replace an active user's launcher.
+          $installer = (Get-ChildItem dist/payool/artifacts/*-win-x64.exe | Select-Object -First 1).FullName
+          $installRoot = Join-Path $env:RUNNER_TEMP 'PayOolInstalled'
+          $install = Start-Process -FilePath $installer -ArgumentList @('/S', '/currentuser', "/D=$installRoot") -WindowStyle Hidden -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
+          node integrations/opencodex/smoke-distribution.cjs $installRoot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload reviewed candidates only
         uses: actions/upload-artifact@v4
         with:
