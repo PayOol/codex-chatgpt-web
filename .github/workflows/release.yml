@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ["v*", "!v*-PayOol.*"]
+    tags: ["v*", "!v*-Integrated.*", "!v*-PayOol.*"]
 
 permissions:
   contents: write

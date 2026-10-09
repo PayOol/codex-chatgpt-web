@@ -10,12 +10,12 @@ afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { recursive: true, force: true });
 });
 
-test("release metadata synchronizes the candidate launcher without retargeting the published installer", () => {
+test.each(["5.0.6-Enhanced.9", "6.1.7-Enhanced.1-Integrated.1", "6.1.5-Enhanced.2-PayOol.1"])("release metadata synchronizes %s without retargeting the published installer", version => {
   const root = mkdtempSync(join(tmpdir(), "codex-version-metadata-"));
   roots.push(root);
   mkdirSync(join(root, "launcher"));
   mkdirSync(join(root, "scripts"));
-  writeFileSync(join(root, "package.json"), `${JSON.stringify({ version: "5.0.6-Enhanced.9" }, null, 2)}\n`);
+  writeFileSync(join(root, "package.json"), `${JSON.stringify({ version }, null, 2)}\n`);
   writeFileSync(join(root, "launcher", "package.json"), `${JSON.stringify({
     name: "launcher",
     version: "5.0.6-Enhanced.1",
@@ -31,7 +31,7 @@ test("release metadata synchronizes the candidate launcher without retargeting t
     "launcher/package.json",
   ]);
   expect(JSON.parse(readFileSync(join(root, "launcher", "package.json"), "utf8")).version)
-    .toBe("5.0.6-Enhanced.9");
+    .toBe(version);
   expect(readFileSync(join(root, "scripts", "install.sh"), "utf8"))
     .toContain('VERSION="${CODEX_CHATGPT_WEB_VERSION:-5.0.6-Enhanced.1}"');
   expect(synchronizeVersionMetadata(root)).toEqual([]);

@@ -97,7 +97,7 @@ try {
   if (-not (Test-IsFullyQualifiedWindowsPath $InstallLocation)) {
     throw "Installer recorded an invalid InstallLocation: $InstallLocation"
   }
-  $Executable = Join-Path $InstallLocation "Codex Web GPT PayOol.exe"
+  $Executable = Join-Path $InstallLocation "Codex Web GPT.exe"
   if (-not (Test-Path $Executable)) { throw "Installed launcher was not found at $Executable" }
   Start-Process $Executable
   Write-Host "Installed $Executable"

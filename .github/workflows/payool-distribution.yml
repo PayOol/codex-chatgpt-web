@@ -1,9 +1,9 @@
-name: PayOol Windows distribution
+name: Codex Web GPT Windows distribution
 
 on:
   workflow_dispatch:
   push:
-    tags: ['v*-PayOol.*']
+    tags: ['v*-Integrated.*', 'v*-PayOol.*']
 
 permissions:
   contents: read
@@ -45,7 +45,7 @@ jobs:
           # Only the disposable GitHub runner installs the candidate. Local
           # smoke-distribution runs never replace an active user's launcher.
           $installer = (Get-ChildItem dist/payool/artifacts/*-win-x64.exe | Select-Object -First 1).FullName
-          $installRoot = Join-Path $env:RUNNER_TEMP 'PayOolInstalled'
+          $installRoot = Join-Path $env:RUNNER_TEMP 'CodexWebGPTInstalled'
           $install = Start-Process -FilePath $installer -ArgumentList @('/S', '/currentuser', "/D=$installRoot") -WindowStyle Hidden -Wait -PassThru
           if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
           node integrations/opencodex/smoke-distribution.cjs $installRoot
@@ -53,7 +53,7 @@ jobs:
       - name: Upload reviewed candidates only
         uses: actions/upload-artifact@v4
         with:
-          name: payool-windows-candidate
+          name: codex-web-gpt-windows-candidate
           path: |
             dist/payool/artifacts/*.exe
             dist/payool/smoke-report.json

@@ -13,7 +13,7 @@ The launcher patch is deliberately anchor-checked. When a future Codex Web GPT r
 
 ## Setup
 
-For a new Windows installation, use the [integrated PayOol installer](../../README.md#installer--installation). It includes the official package, tools and first-run provisioning. The manual procedure below is intended for developers adapting an existing upstream launcher.
+For a new Windows installation, use the [integrated installer](../../README.md#installer--installation). It includes the official package, tools and first-run provisioning. The manual procedure below is intended for developers adapting an existing upstream launcher.
 
 Run the bootstrap script from this directory with the packaged Bun runtime and launcher paths supplied by the host:
 

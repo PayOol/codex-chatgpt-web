@@ -1,4 +1,4 @@
-# Codex Web GPT + OpenCodex — PayOol
+# Codex Web GPT
 
 Windows distribution of [Codex Web GPT Enhanced](https://github.com/Evanlau1798/codex-chatgpt-web) with the [OpenCodex](https://github.com/lidge-jun/opencodex) integration included.
 
@@ -6,13 +6,13 @@ Codex connects to Codex Web GPT. ChatGPT Web models keep their existing model, e
 
 ## Installer / Installation
 
-**Windows 11 x64 — preview `6.1.7-Enhanced.1-PayOol.1`.**
+**Windows 11 x64 — preview `6.1.7-Enhanced.1-Integrated.1`.**
 
-- [Download the Windows installer](https://github.com/PayOol/codex-chatgpt-web/releases/download/v6.1.7-Enhanced.1-PayOol.1/codex-web-gpt-6.1.7-Enhanced.1-PayOol.1-win-x64.exe)
-- [Release notes, checksums and validation limits](https://github.com/PayOol/codex-chatgpt-web/releases/tag/v6.1.7-Enhanced.1-PayOol.1)
+- [Download the Windows installer](https://github.com/PayOol/codex-chatgpt-web/releases/download/v6.1.7-Enhanced.1-Integrated.1/codex-web-gpt-6.1.7-Enhanced.1-Integrated.1-win-x64.exe)
+- [Release notes, checksums and validation limits](https://github.com/PayOol/codex-chatgpt-web/releases/tag/v6.1.7-Enhanced.1-Integrated.1)
 - [Guide français](docs/INSTALL.fr.md)
 
-1. Run the installer and open **Codex Web GPT PayOol** from the Start menu.
+1. Run the installer and open **Codex Web GPT** from the Start menu.
 2. Follow the normal ChatGPT sign-in and Codex installation steps. Configure the Native2 connector if you use native tools through ChatGPT Web.
 3. Open **OpenCodex**, below **Configuration**, and connect your own providers/accounts. Their models are included in the catalog served to Codex. Fully restart Codex after its initial model setup.
 

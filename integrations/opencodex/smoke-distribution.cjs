@@ -64,8 +64,8 @@ async function bridgeSmoke(settings, integration, env, scratch) {
 async function main() {
   const headless = process.argv.includes('--headless');
   const appRoot = path.resolve(process.argv.slice(2).find(arg => !arg.startsWith('--')) || path.join(repo, 'dist/payool/artifacts/win-unpacked'));
-  const executable = path.join(appRoot, 'Codex Web GPT PayOol.exe');
-  if (!fs.existsSync(executable)) throw Error('Build the PayOol Windows distribution first');
+  const executable = path.join(appRoot, 'Codex Web GPT.exe');
+  if (!fs.existsSync(executable)) throw Error('Build the Codex Web GPT Windows distribution first');
   // A real installed runtime must not point into the OS temporary directory.
   // Match an installed user-profile path. A deeply nested checkout can put
   // npm's entry point beyond Windows' path limit and is not an install profile.
@@ -85,7 +85,7 @@ async function main() {
         await require('./distribution.cjs').provision({ payload: path.join(appRoot, 'resources/opencodex'),
           coreHome, codexHome, bun: path.join(appRoot, 'resources/runtime/runtime/bun.exe'), launcher: executable });
       } else {
-        await runObservedProcess(executable, ['--launcher-smoke-test'], { env, timeoutMs: 180000, stage: 'PayOol isolated-profile launch' });
+        await runObservedProcess(executable, ['--launcher-smoke-test'], { env, timeoutMs: 180000, stage: 'Codex Web GPT isolated-profile launch' });
         assert.equal(read(marker).ok, true);
         assert.equal(read(marker).runtimeVerified, true);
       }

@@ -1,6 +1,6 @@
 {
   "name": "codex-web-gpt-launcher",
-  "version": "6.1.7-Enhanced.1-PayOol.1",
+  "version": "6.1.7-Enhanced.1-Integrated.1",
   "private": true,
   "description": "Desktop control center for Codex ChatGPT Web",
   "author": "miuuyy",
@@ -49,7 +49,7 @@
   },
   "payoolDistribution": {
     "appId": "dev.payool.codexwebgpt.launcher",
-    "productName": "Codex Web GPT PayOol",
+    "productName": "Codex Web GPT",
     "nsisGuid": "a78db73a-56f0-4995-9d09-7747be6fa920"
   },
   "build": {
