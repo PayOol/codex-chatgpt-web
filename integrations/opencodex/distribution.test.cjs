@@ -64,6 +64,22 @@ test('a running owner blocks replacement without changing settings or code', asy
   assert.equal(fs.readFileSync(path.join(root, 'settings.json'), 'utf8'), settings);
   assert.equal(fs.readFileSync(path.join(root, 'manager.cjs'), 'utf8'), 'source manager.cjs');
 });
+test('an interrupted payload copy is never activated and a later launch completes it', async t => {
+  const f = fixture(t);
+  const original = fs.copyFileSync;
+  let copied = 0;
+  fs.copyFileSync = (...args) => {
+    if (++copied === 4) throw Object.assign(Error('simulated interrupted write'), { code: 'EIO' });
+    return original(...args);
+  };
+  try { await assert.rejects(f.install(), /interrupted write/); }
+  finally { fs.copyFileSync = original; }
+  const root = path.join(f.options.coreHome, 'integrations', 'opencodex');
+  assert.equal(fs.existsSync(path.join(root, 'settings.json')), false);
+  assert.equal(fs.existsSync(path.join(root, 'distribution.json')), false);
+  assert.equal((await f.install()).installed, true);
+  assert.equal(f.read(path.join(root, 'settings.json')).version, '2.81.0');
+});
 test('corrupt payload, missing files, duplicate records and traversal are rejected', t => {
   const f = fixture(t);
   for (const unsafe of ['../x', '/x', 'C:\\x', 'a/../b', 'a//b']) assert.throws(() => safePath(f.payload, unsafe));

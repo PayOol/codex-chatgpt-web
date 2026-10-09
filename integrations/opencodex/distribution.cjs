@@ -90,15 +90,19 @@ async function provision({ payload, coreHome, codexHome, bun, launcher }) {
   // Immutable per-distribution payload; a later launcher update cannot remove
   // the package currently used by an independently updated OpenCodex instance.
   const deployed = path.join(root, 'distributions', manifestHash);
-  if (!fs.existsSync(deployed)) {
-    const temporary = deployed + '.next-' + crypto.randomUUID();
-    fs.mkdirSync(temporary, { recursive: true });
+  const complete = path.join(deployed, 'complete.json');
+  if (!fs.existsSync(complete) || read(complete).manifestHash !== manifestHash) {
+    // Windows scanners may retain handles anywhere in a large npm tree, making
+    // a directory rename fail indefinitely. This immutable directory is not
+    // activated until every copy is verified and the completion marker exists.
+    fs.mkdirSync(deployed, { recursive: true });
     for (const item of manifest.files) {
-      const target = safePath(temporary, item.path);
+      const target = safePath(deployed, item.path);
       fs.mkdirSync(path.dirname(target), { recursive: true });
       fs.copyFileSync(safePath(payload, item.path), target);
+      if (hash(target) !== item.sha256) throw Error('Copied OpenCodex payload failed its integrity check');
     }
-    rename(temporary, deployed);
+    atomic(complete, { manifestHash });
   }
   const port = previous?.port || await freePort(10110);
   const dashboardPort = previous?.dashboardPort || await freePort(10100, [port]);
