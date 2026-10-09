@@ -2,7 +2,7 @@
 
 Cette distribution PayOol réunit le lanceur Codex Web GPT Enhanced et le moteur officiel OpenCodex. L'installateur Windows x64 contient les composants nécessaires ; aucune installation manuelle de Git, Node, npm, Python ou OpenCodex n'est nécessaire.
 
-1. Télécharge l'exécutable Windows depuis la [release PayOol](https://github.com/PayOol/codex-chatgpt-web/releases/tag/v6.1.5-Enhanced.2-PayOol.1). Les limites de validation de cette préversion sont indiquées dans ses notes.
+1. Télécharge l'exécutable Windows depuis la [release PayOol](https://github.com/PayOol/codex-chatgpt-web/releases/tag/v6.1.7-Enhanced.1-PayOol.1). Les limites de validation de cette préversion sont indiquées dans ses notes.
 2. Lance l'installateur, puis **Codex Web GPT PayOol** depuis le menu Démarrer.
 3. Connecte ton propre compte ChatGPT, teste le navigateur et installe l'intégration dans Codex depuis le lanceur.
 4. Configure **Codex Native2** dans le parcours MCP si tu souhaites utiliser les outils natifs avec les modèles Web.
@@ -28,7 +28,7 @@ Le lanceur doit rester actif pour que Codex puisse utiliser ses modèles. L'opti
 La release fournit `checksums.txt`. Avec PowerShell, calcule l'empreinte de l'installateur :
 
 ```powershell
-Get-FileHash -Algorithm SHA256 .\codex-web-gpt-6.1.5-Enhanced.2-PayOol.1-win-x64.exe
+Get-FileHash -Algorithm SHA256 .\codex-web-gpt-6.1.7-Enhanced.1-PayOol.1-win-x64.exe
 ```
 
 Compare le résultat à la ligne correspondante dans `checksums.txt`. Cette préversion n'est pas signée avec un certificat de publication Windows. Smart App Control peut donc bloquer son exécution sur certains ordinateurs, y compris celui utilisé pour préparer cette version. Une empreinte correcte ne remplace pas une signature. Si Windows la bloque, conserve ton installation actuelle et attends une distribution signée ; ne désactive pas les protections Windows.

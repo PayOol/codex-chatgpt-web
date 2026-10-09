@@ -52,6 +52,14 @@ function alive(file) {
   if (!Number.isSafeInteger(owner.pid) || owner.pid <= 0) throw Error('Invalid integration lock owner');
   try { process.kill(owner.pid, 0); return true; } catch (e) { if (e.code === 'ESRCH') return false; throw e; }
 }
+function sameProfilePath(left, right) {
+  if (typeof left !== 'string' || !path.isAbsolute(left)) return false;
+  const canonical = value => {
+    const resolved = fs.existsSync(value) ? fs.realpathSync.native(value) : path.resolve(value);
+    return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  return canonical(left) === canonical(right);
+}
 async function freePort(preferred, excluded = []) {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -81,7 +89,7 @@ async function provision({ payload, coreHome, codexHome, bun, launcher }) {
   if (alive(path.join(root, 'owner.lock')) || alive(path.join(root, 'update.lock'))) throw Error('OpenCodex is in use. Keep this installation open and finish active tasks before upgrading.');
   const manifest = verifyPayload(payload);
   const home = previous?.home || path.join(root, 'state');
-  if (previous && (previous.coreHome !== coreHome || previous.codexHome !== codexHome)) throw Error('OpenCodex belongs to a different Codex profile');
+  if (previous && (!sameProfilePath(previous.coreHome, coreHome) || !sameProfilePath(previous.codexHome, codexHome))) throw Error('OpenCodex belongs to a different Codex profile');
   const configFile = path.join(home, 'config.json');
   if (fs.existsSync(configFile)) {
     const config = read(configFile);

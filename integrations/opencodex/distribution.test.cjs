@@ -64,6 +64,33 @@ test('a running owner blocks replacement without changing settings or code', asy
   assert.equal(fs.readFileSync(path.join(root, 'settings.json'), 'utf8'), settings);
   assert.equal(fs.readFileSync(path.join(root, 'manager.cjs'), 'utf8'), 'source manager.cjs');
 });
+
+test('legacy profile path spellings migrate without losing providers or the gateway key', async t => {
+  const f = fixture(t), { root } = await f.install();
+  const file = path.join(root, 'settings.json'), settings = f.read(file);
+  const legacy = value => process.platform === 'win32'
+    ? value.replaceAll('\\', '/').toUpperCase() : value + '/.';
+  f.write(file, { ...settings, coreHome: legacy(settings.coreHome), codexHome: legacy(settings.codexHome) });
+  fs.unlinkSync(path.join(root, 'distribution.json'));
+  const configFile = path.join(settings.home, 'config.json');
+  const config = { ...f.read(configFile), providers: { preserved: { key: 'fixture-not-a-secret' } } };
+  f.write(configFile, config);
+  const key = fs.readFileSync(path.join(root, 'gateway-key'), 'utf8');
+  assert.equal((await f.install()).installed, true);
+  assert.deepEqual(f.read(configFile), config);
+  assert.equal(fs.readFileSync(path.join(root, 'gateway-key'), 'utf8'), key);
+  assert.equal(f.read(file).packageRoot, settings.packageRoot);
+});
+
+test('migration still rejects a different Codex profile before changing its settings', async t => {
+  const f = fixture(t), { root } = await f.install();
+  const file = path.join(root, 'settings.json');
+  const previous = { ...f.read(file), codexHome: path.join(f.root, 'different-codex') };
+  f.write(file, previous);
+  fs.unlinkSync(path.join(root, 'distribution.json'));
+  await assert.rejects(f.install(), /different Codex profile/);
+  assert.deepEqual(f.read(file), previous);
+});
 test('an interrupted payload copy is never activated and a later launch completes it', async t => {
   const f = fixture(t);
   const original = fs.copyFileSync;
