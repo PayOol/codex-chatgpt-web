@@ -6,7 +6,7 @@ Codex connects to Codex Web GPT. ChatGPT Web models keep their existing model, e
 
 ## Installer / Installation
 
-**Windows 11 x64 — preview `6.1.7-Enhanced.1-Integrated.1`.**
+**Windows 11 x64 — release `6.1.7-Enhanced.1-Integrated.1` (Latest).**
 
 - [Download the Windows installer](https://github.com/PayOol/codex-chatgpt-web/releases/download/v6.1.7-Enhanced.1-Integrated.1/codex-web-gpt-6.1.7-Enhanced.1-Integrated.1-win-x64.exe)
 - [Release notes, checksums and validation limits](https://github.com/PayOol/codex-chatgpt-web/releases/tag/v6.1.7-Enhanced.1-Integrated.1)
@@ -20,7 +20,7 @@ The installer includes the official OpenCodex package, Bun, and a private Node/n
 
 The launcher must remain running to serve Codex. Keep-running-on-close can hide its window while retaining the service; fully quitting it stops the connection. OpenCodex updates wait for active tasks, then restart only the internal OpenCodex process. See [update behavior](integrations/opencodex/README.md#update-behavior).
 
-This preview packages Windows x64 only. Existing macOS/Linux documentation describes the upstream project; this fork does not publish integrated installers for those platforms yet. See the release notes for exactly which account-bound checks were completed.
+This release packages Windows x64 only. Existing macOS/Linux documentation describes the upstream project; this fork does not publish integrated installers for those platforms yet. See the release notes for exactly which account-bound checks were completed.
 
 ## Build and verify
 
@@ -42,7 +42,7 @@ Before publishing a release, run the focused integration tests, `bun run verify:
 
 ## Updating and existing installations
 
-This fork's launcher update checks use **PayOol/codex-chatgpt-web**. They do not silently replace it with an upstream installer. Public previews are installed explicitly; GitHub's latest-release updater offers stable releases only.
+This fork's launcher update checks use **PayOol/codex-chatgpt-web**. They do not silently replace it with an upstream installer. Release `6.1.7-Enhanced.1-Integrated.1` is designated **Latest** and is available through GitHub's stable release endpoint. Any releases marked as previews still require explicit installation. The validation scope and limits remain documented in the release notes.
 
 OpenCodex updates still come from the official npm package and are managed independently. Providers and credentials live outside versioned program files. A launcher upgrade preserves an independently updated OpenCodex version and existing settings. Close the previous launcher normally, after tasks finish, before switching installations; two launchers must not own the same profile simultaneously.
 
