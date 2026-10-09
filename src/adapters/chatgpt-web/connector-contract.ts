@@ -69,50 +69,74 @@ export interface ConnectorContractProbe {
   nonce: string;
   query: string;
   prompt: string;
+  attempt: number;
+}
+
+export interface ConnectorContractVerificationOptions {
+  /**
+   * Native2 can finish a browser turn without dispatching the requested MCP
+   * call. Retry only that missing-evidence case; transport and UI failures
+   * still fail immediately. Zero Risk stays single-shot because its startup
+   * call owns the request lifecycle.
+   */
+  retryMissingEvidence?: boolean;
 }
 
 export async function verifyCurrentConnectorContract(
   appName: string,
   contract: ChatGptMcpContract,
   runProbe: (probe: ConnectorContractProbe) => Promise<void>,
-  reference?: string,
+  reference?: string | ((attempt: number) => Promise<string>),
+  options?: ConnectorContractVerificationOptions,
 ): Promise<void> {
   const contractRevision = connectorContractRevision(contract);
-  const nonce = randomUUID().replaceAll("-", "");
-  const query = connectorContractProbeQuery(contractRevision, nonce);
   if (contract === "safe" && !reference) {
     throw new Error("Zero Risk connector contract verification requires a live request id");
   }
-  const prompt = contract === "safe"
-    ? [
-        "Call codex_turn_start exactly once with",
-        JSON.stringify({ request_id: reference }),
-        "Then call codex_tool_inventory exactly once with",
-        JSON.stringify({ request_id: reference, query, include_schema: false }),
-        "Do not call any other tool. After the inventory call succeeds, reply briefly.",
-      ].join(" ")
-    : reference
+  const maxAttempts = contract === "native" && options?.retryMissingEvidence === true ? 2 : 1;
+  let lastMissingEvidenceError: Error | undefined;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const currentReference = typeof reference === "function" ? await reference(attempt) : reference;
+    const nonce = randomUUID().replaceAll("-", "");
+    const query = connectorContractProbeQuery(contractRevision, nonce);
+    const retryInstruction = attempt > 1
+      ? "This is a retry because the previous turn did not dispatch the inventory call. The exact inventory call is mandatory; do not produce a final answer before it succeeds."
+      : "";
+    const prompt = contract === "safe"
       ? [
-          "Do not send progress updates for this connector verification.",
-          "Call codex_tool_inventory exactly once with",
-          JSON.stringify({ turn_token: reference, query, include_schema: false }),
-          "Do not call any other work tool. After the inventory call succeeds, complete the brief final response through the bound output control if the transport requires it; otherwise reply briefly.",
+          "Protocol verification: make a real function call to the connected MCP tool codex_turn_start exactly once with",
+          JSON.stringify({ request_id: currentReference }),
+          "Then make a real function call to codex_tool_inventory exactly once with",
+          JSON.stringify({ request_id: currentReference, query }),
+          "Do not claim either call in prose and do not answer before the inventory tool result is returned. Do not call any other tool. After the inventory call succeeds, reply briefly.",
         ].join(" ")
-      : [
-          "Do not send progress updates for this connector verification.",
-          "Call codex_tool_inventory exactly once using the current turn_token from codex_native_turn_binding, with",
-          JSON.stringify({ query, include_schema: false }),
-          "Do not call any other work tool. After the inventory call succeeds, complete the brief final response through the bound output control if the transport requires it; otherwise reply briefly.",
-        ].join(" ");
-  discardConnectorContractProbeEvidence(nonce);
-  try {
-    await runProbe({ contractRevision, nonce, query, prompt });
-    if (!consumeConnectorContractProbeEvidence(nonce, contractRevision)) {
-      throw new Error(
-        `${appName} did not execute the current runtime contract probe.`,
-      );
-    }
-  } finally {
+      : currentReference
+        ? [
+            "Do not send progress updates for this connector verification.",
+            "Protocol verification: you must make a real function call to the connected MCP tool codex_tool_inventory now. Do not write a prose claim that you called it.",
+            retryInstruction,
+            "Use exactly these arguments:",
+            JSON.stringify({ turn_token: currentReference, query }),
+            "Wait for the tool result before answering. Do not call any other work tool. After the inventory call succeeds, complete the brief final response through the bound output control if the transport requires it; otherwise reply briefly.",
+          ].filter(Boolean).join(" ")
+        : [
+            "Do not send progress updates for this connector verification.",
+            "Protocol verification: you must make a real function call to the connected MCP tool codex_tool_inventory now. Do not write a prose claim that you called it.",
+            retryInstruction,
+            "Use the current turn_token from codex_native_turn_binding and exactly these arguments:",
+            JSON.stringify({ query }),
+            "Wait for the tool result before answering. Do not call any other work tool. After the inventory call succeeds, complete the brief final response through the bound output control if the transport requires it; otherwise reply briefly.",
+          ].filter(Boolean).join(" ");
     discardConnectorContractProbeEvidence(nonce);
+    try {
+      await runProbe({ contractRevision, nonce, query, prompt, attempt });
+      if (consumeConnectorContractProbeEvidence(nonce, contractRevision)) return;
+      lastMissingEvidenceError = new Error(
+        `${appName} did not execute the current runtime contract probe after attempt ${attempt}/${maxAttempts}.`,
+      );
+    } finally {
+      discardConnectorContractProbeEvidence(nonce);
+    }
   }
+  throw lastMissingEvidenceError ?? new Error(`${appName} did not execute the current runtime contract probe.`);
 }
