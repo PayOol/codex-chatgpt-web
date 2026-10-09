@@ -61,7 +61,7 @@ const BROWSER_DESCRIPTOR_PATH = path.join(CORE_HOME, "runtime", "launcher-browse
 const BROWSER_HELPER_PATH = app.isPackaged
   ? path.join(process.resourcesPath, "runtime", "app", "browser-helper.cjs")
   : path.join(SOURCE_ROOT, ".launcher-runtime", "browser-helper.cjs");
-const GITHUB_URL = "https://github.com/Evanlau1798/codex-chatgpt-web";
+const GITHUB_URL = "https://github.com/PayOol/codex-chatgpt-web";
 const X_URL = "https://x.com/EvanLau1798";
 const CONNECTORS_URL = "https://chatgpt.com/#settings/Plugins";
 const TUNNELS_URL = "https://platform.openai.com/settings/organization/tunnels";

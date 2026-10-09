@@ -1,0 +1,51 @@
+name: PayOol Windows distribution
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*-PayOol.*']
+
+permissions:
+  contents: read
+
+jobs:
+  windows-distribution:
+    if: github.repository == 'PayOol/codex-chatgpt-web'
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
+        working-directory: launcher
+      - name: Prepare portable Windows CPU baseline
+        run: ./scripts/prepare-windows-baseline-bun.ps1 -Version 1.4.0 -Revision 1.4.0+34cbb9a40 -GitHubEnv $env:GITHUB_ENV
+      - name: Verify source and integration
+        run: |
+          bun run verify
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test integrations/opencodex/*.test.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          bun test ./integrations/opencodex/gateway.test.ts ./integrations/opencodex/dashboard.test.ts ./integrations/opencodex/ownership.test.ts ./integrations/opencodex/update-lock.test.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build self-contained installer
+        run: |
+          $env:CODEX_CHATGPT_WEB_BUN = (Get-Command bun).Source
+          node integrations/opencodex/build-distribution.cjs
+      - name: Verify clean-profile launch and official OpenCodex
+        run: node integrations/opencodex/smoke-distribution.cjs
+      - name: Upload reviewed candidates only
+        uses: actions/upload-artifact@v4
+        with:
+          name: payool-windows-candidate
+          path: |
+            dist/payool/artifacts/*.exe
+            dist/payool/smoke-report.json
+          if-no-files-found: error
+          retention-days: 14

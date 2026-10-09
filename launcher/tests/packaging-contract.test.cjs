@@ -87,10 +87,10 @@ test("release installers resolve checksummed native launcher assets", () => {
   assert.equal(fullyQualifiedWindowsPath.test("C:Codex Web GPT"), false);
   assert.equal(fullyQualifiedWindowsPath.test("\\Codex Web GPT"), false);
   assert.equal(fullyQualifiedWindowsPath.test("Codex Web GPT"), false);
-  assert.ok(windowsInstaller.includes(`HKCU:\\Software\\${manifest.build.nsis.guid}`));
+  assert.ok(windowsInstaller.includes(`HKCU:\\Software\\${manifest.payoolDistribution?.nsisGuid || manifest.build.nsis.guid}`));
   assert.ok(devProfile.includes(`WINDOWS_LAUNCHER_GUID = "${manifest.build.nsis.guid}"`));
   assert.match(windowsInstaller, /Get-ItemPropertyValue[\s\S]*InstallLocation/);
-  assert.ok(windowsInstaller.includes(`Join-Path $InstallLocation "${manifest.build.productName}.exe"`));
+  assert.ok(windowsInstaller.includes(`Join-Path $InstallLocation "${manifest.payoolDistribution?.productName || manifest.build.productName}.exe"`));
   assert.match(windowsInstaller, /-ArgumentList "\/S", "\/currentuser"/);
   const packageSmoke = fs.readFileSync(path.join(launcherRoot, "scripts", "smoke-package.cjs"), "utf8");
   assert.match(packageSmoke, /runObservedProcess\(installer, \["\/S", "\/currentuser"\]/);

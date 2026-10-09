@@ -50,7 +50,7 @@ function Resolve-LatestReleaseVersion {
   return $Tag
 }
 
-$Repository = if ($env:CODEX_WEB_GPT_REPOSITORY) { $env:CODEX_WEB_GPT_REPOSITORY } else { "Evanlau1798/codex-chatgpt-web" }
+$Repository = if ($env:CODEX_WEB_GPT_REPOSITORY) { $env:CODEX_WEB_GPT_REPOSITORY } else { "PayOol/codex-chatgpt-web" }
 if ($Repository -notmatch '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$') {
   throw "Invalid GitHub repository: $Repository"
 }
@@ -72,7 +72,7 @@ $BaseUrl = "https://github.com/$Repository/releases/download/v$Version"
 $Temp = Join-Path ([System.IO.Path]::GetTempPath()) "codex-web-gpt-$([guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $Temp | Out-Null
 try {
-  if (Get-Process -Name "Codex Web GPT" -ErrorAction SilentlyContinue) {
+  if (Get-Process -Name "Codex Web GPT", "Codex Web GPT PayOol" -ErrorAction SilentlyContinue) {
     throw "Quit Codex Web GPT before updating it"
   }
   $Installer = Join-Path $Temp $Asset
@@ -92,12 +92,12 @@ try {
   if ($Actual -ne $Expected) { throw "SHA-256 verification failed for $Asset" }
   $Process = Start-Process -FilePath $Installer -ArgumentList "/S", "/currentuser" -Wait -PassThru
   if ($Process.ExitCode -ne 0) { throw "Installer exited with code $($Process.ExitCode)" }
-  $InstallRegistry = "HKCU:\Software\d1a6026a-6210-588e-9a2b-da3936f94e02"
+  $InstallRegistry = "HKCU:\Software\a78db73a-56f0-4995-9d09-7747be6fa920"
   $InstallLocation = [string](Get-ItemPropertyValue -LiteralPath $InstallRegistry -Name "InstallLocation")
   if (-not (Test-IsFullyQualifiedWindowsPath $InstallLocation)) {
     throw "Installer recorded an invalid InstallLocation: $InstallLocation"
   }
-  $Executable = Join-Path $InstallLocation "Codex Web GPT.exe"
+  $Executable = Join-Path $InstallLocation "Codex Web GPT PayOol.exe"
   if (-not (Test-Path $Executable)) { throw "Installed launcher was not found at $Executable" }
   Start-Process $Executable
   Write-Host "Installed $Executable"

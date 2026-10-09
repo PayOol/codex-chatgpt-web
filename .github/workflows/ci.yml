@@ -102,6 +102,10 @@ jobs:
         if: runner.os == 'Linux'
         run: bun run launcher/scripts/prepare-linux-appimage-tools.cjs
       - run: bun run verify --verbose --package
+      - name: Verify optional OpenCodex integration
+        run: node --test integrations/opencodex/*.test.cjs
+      - name: Verify OpenCodex transport and ownership
+        run: bun test ./integrations/opencodex/gateway.test.ts ./integrations/opencodex/dashboard.test.ts ./integrations/opencodex/ownership.test.ts ./integrations/opencodex/update-lock.test.ts
       - name: Verify Linux AppImage ABI on current Arch
         if: runner.os == 'Linux' && runner.arch == 'X64'
         run: |

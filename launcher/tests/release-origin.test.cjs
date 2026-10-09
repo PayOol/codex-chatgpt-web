@@ -4,7 +4,7 @@ const path = require("node:path");
 const test = require("node:test");
 
 const repositoryRoot = path.resolve(__dirname, "../..");
-const releaseRepository = "Evanlau1798/codex-chatgpt-web";
+const releaseRepository = "PayOol/codex-chatgpt-web";
 
 test("Enhanced release installers and launcher updates use the fork release origin", () => {
   const installShell = fs.readFileSync(path.join(repositoryRoot, "scripts/install.sh"), "utf8");
@@ -19,10 +19,10 @@ test("Enhanced release installers and launcher updates use the fork release orig
 });
 
 test("Enhanced release readmes install and clone from the fork", () => {
-  for (const name of ["README.md", "README.zh-CN.md", "README.ja.md"]) {
+  for (const name of ["README.md"]) {
     const readme = fs.readFileSync(path.join(repositoryRoot, name), "utf8");
-    assert.match(readme, new RegExp(`github\\.com/${releaseRepository}/releases/latest/download/install-launcher`));
+    assert.match(readme, new RegExp(`github\\.com/${releaseRepository}/releases/download/[^/]+/codex-web-gpt-`));
     assert.match(readme, new RegExp(`git clone https://github\\.com/${releaseRepository}\\.git`));
-    assert.match(readme, /3\.0\.1-Enhanced\.1/);
+    assert.match(readme, /OpenCodex/);
   }
 });

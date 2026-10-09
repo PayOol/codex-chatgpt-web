@@ -14,8 +14,8 @@ function packageMetadata(root: string): PackageMetadata {
 function forkVersion(root: string): string {
   const version = packageMetadata(root).version;
   if (!version) throw new Error("package.json has no version");
-  if (!/^\d+\.\d+\.\d+-Enhanced\.\d+$/.test(version)) {
-    throw new Error(`Fork releases must use the <upstream>-Enhanced.<revision> convention, received ${version}`);
+  if (!/^\d+\.\d+\.\d+-Enhanced\.\d+(?:-PayOol\.\d+)?$/.test(version)) {
+    throw new Error(`Fork releases must use <upstream>-Enhanced.<revision> with an optional -PayOol.<revision>, received ${version}`);
   }
   return version;
 }
