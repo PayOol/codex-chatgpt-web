@@ -103,7 +103,9 @@ function createUpdateDownloader(fetch, idleTimeoutMs = 60_000) {
         }
         if (response.status !== 200) {
           await response.body?.cancel();
-          throw new Error(`Update download failed with HTTP ${response.status}`);
+          throw Object.assign(new Error(`Update download failed with HTTP ${response.status}`), {
+            status: response.status, url: parsed.toString(),
+          });
         }
         if (!response.body) throw new Error("Update download returned no body");
         armTimeout();
@@ -326,6 +328,14 @@ function createUpdateController({
       logger?.info("launcher.update_available", { currentVersion, version, platform, arch });
       return transition({ status: "available", version });
     } catch (error) {
+      // A new fork with only public previews has no /releases/latest yet.
+      // This exception applies only to that exact metadata endpoint; missing
+      // assets, rate limits and other network errors retain their failure path.
+      if (error?.status === 404 && error?.url === RELEASE_API_URL) {
+        candidate = null;
+        logger?.info("launcher.no_stable_release");
+        return transition({ status: "up-to-date" });
+      }
       const message = error instanceof Error ? error.message : String(error);
       logger?.warn("launcher.update_check_failed", { message });
       return transition({ status: "error", message });

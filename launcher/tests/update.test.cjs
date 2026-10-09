@@ -97,6 +97,24 @@ test("release comparison and platform assets are strict", () => {
   assert.equal(releaseAssetName("1.2.0", "linux", "ia32"), null);
 });
 
+test("a preview-only fork has no stable update; other HTTP failures stay visible", async () => {
+  const latest = "https://api.github.com/repos/PayOol/codex-chatgpt-web/releases/latest";
+  for (const [url, status, expected] of [
+    [latest, 404, "up-to-date"],
+    [latest, 403, "error"],
+    [latest, 502, "error"],
+    ["https://github.com/PayOol/codex-chatgpt-web/releases/download/v1.2.0/checksums.txt", 404, "error"],
+  ]) {
+    const downloader = createUpdateDownloader(async () => new Response("not available", { status }));
+    const controller = createUpdateController({
+      currentVersion: "6.1.5-Enhanced.2-PayOol.1", platform: "win32", arch: "x64", packaged: true,
+      dependencies: { fetchRelease: async () => JSON.parse(await downloader.downloadText(url)) },
+    });
+    assert.equal((await controller.checkOnce()).status, expected);
+    await assert.rejects(controller.beginInstall(), /No launcher update/);
+  }
+});
+
 test("checksums and release URLs bind the exact expected asset", () => {
   const hash = "a".repeat(64);
   assert.equal(expectedChecksum(`${hash}  launcher.zip\n`, "launcher.zip"), hash);
