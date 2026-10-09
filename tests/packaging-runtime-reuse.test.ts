@@ -57,7 +57,9 @@ test("packaging reuses only an identity-validated bundle and validates the copie
   expect(events[1]?.path).toBe(join(root, "build", "runtime"));
   expect(events[3]?.identity).toEqual({ version: JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version,
     platform: "win32", arch: "x64" });
-});
+// The first fixture loads the packaging dependency graph. Cold Windows CI
+// workers can take longer than Bun's default five seconds to resolve it.
+}, 15_000);
 
 test("verified runtime copying preserves symlink targets verbatim", () => {
   const {events, error} = packageFixture([`--runtime=${verified}`]);

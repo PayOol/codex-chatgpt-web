@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
 const { spawn, spawnSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
 const net = require('node:net');
+const { homedir } = require('node:os');
 const { runObservedProcess } = require('../../launcher/scripts/package-smoke-process.cjs');
 
 const repo = path.resolve(__dirname, '../..');
@@ -66,8 +67,9 @@ async function main() {
   const executable = path.join(appRoot, 'Codex Web GPT PayOol.exe');
   if (!fs.existsSync(executable)) throw Error('Build the PayOol Windows distribution first');
   // A real installed runtime must not point into the OS temporary directory.
-  // Keep this disposable test profile under the ignored build output instead.
-  const scratchParent = path.join(repo, 'dist/payool/smoke-runs');
+  // Match an installed user-profile path. A deeply nested checkout can put
+  // npm's entry point beyond Windows' path limit and is not an install profile.
+  const scratchParent = path.join(homedir(), '.codex-web-gpt-test-profiles');
   fs.mkdirSync(scratchParent, { recursive: true });
   const scratch = fs.mkdtempSync(path.join(scratchParent, 'clean-'));
   const coreHome = path.join(scratch, 'core'), codexHome = path.join(scratch, 'codex');
@@ -105,7 +107,7 @@ async function main() {
     assert.ok(evidence.models > 0);
     await bridgeSmoke(settings, integration, env, scratch);
     const npm = spawnSync(settings.node, [settings.npmCli, '--version'], { encoding: 'utf8', windowsHide: true, timeout: 10000 });
-    assert.equal(npm.status, 0);
+    assert.equal(npm.status, 0, npm.error?.message || npm.stderr || 'bundled npm must start from the installed profile');
     // Reopening must retain the private gateway key and provider configuration.
     const key = fs.readFileSync(path.join(integration, 'gateway-key'), 'utf8');
     const configFile = path.join(settings.home, 'config.json');
