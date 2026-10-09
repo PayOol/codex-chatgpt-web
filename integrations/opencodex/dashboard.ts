@@ -82,5 +82,9 @@ export function startDashboard(root: string, fetchOriginal: Transport) {
       maxPayloadLength:16*1024*1024,backpressureLimit:1024*1024,
     },
   });
+  // The official Responses server owns this process's lifetime. Leaving this
+  // auxiliary listener referenced prevents an otherwise graceful drain/shutdown
+  // from exiting, which in turn blocks launcher upgrades.
+  server.unref();
   return server;
 }

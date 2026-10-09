@@ -28,7 +28,7 @@ async function bridgeSmoke(settings, integration, env, scratch) {
   const endpoint = `http://127.0.0.1:${port}`;
   try {
     let healthy = false;
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 200; i++) {
       if (child.exitCode !== null) {
         const detail = fs.readFileSync(path.join(scratch, 'bridge.log'), 'utf8').slice(-4000)
           .replaceAll(config.controlToken, '[redacted]').replace(/Bearer\s+\S+/g, 'Bearer [redacted]');
@@ -37,14 +37,21 @@ async function bridgeSmoke(settings, integration, env, scratch) {
       try { const r = await fetch(endpoint + '/healthz', { signal: AbortSignal.timeout(500) }); if (r.ok && (await r.json()).pid === child.pid) { healthy = true; break; } } catch {}
       await pause(300);
     }
-    assert.equal(healthy, true, 'integrated bridge health');
+    if (!healthy) {
+      const detail = [path.join(scratch, 'bridge.log'), path.join(integration, 'logs/backend.log')]
+        .filter(file => fs.existsSync(file)).map(file => fs.readFileSync(file, 'utf8').slice(-5000)).join('\n')
+        .replaceAll(config.controlToken, '[redacted]').replace(/Bearer\s+\S+/g, 'Bearer [redacted]');
+      throw Error('Integrated bridge health timed out: ' + detail);
+    }
     const backend = await fetch(`http://127.0.0.1:${settings.port}/healthz`);
     assert.equal((await backend.json()).version, settings.version);
     const dashboard = await fetch(`http://127.0.0.1:${settings.dashboardPort}/`);
     assert.equal(dashboard.ok, true);
     assert.match(await dashboard.text(), /<html/);
+    const drain = await fetch(endpoint + '/admin/drain', { method: 'POST', headers: { authorization: 'Bearer ' + config.controlToken }, signal: AbortSignal.timeout(5000) });
+    assert.equal(drain.ok, true, 'isolated bridge drain');
     const response = await fetch(endpoint + '/admin/shutdown', { method: 'POST', headers: { authorization: 'Bearer ' + config.controlToken }, signal: AbortSignal.timeout(5000) });
-    assert.equal(response.ok, true);
+    assert.equal(response.ok, true, 'isolated bridge shutdown response');
     const code = await Promise.race([exit, pause(15000).then(() => 'timeout')]);
     assert.equal(code, 0, 'isolated bridge shutdown');
   } finally {

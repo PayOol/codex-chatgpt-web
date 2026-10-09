@@ -31,4 +31,4 @@ La release fournit `checksums.txt`. Avec PowerShell, calcule l'empreinte de l'in
 Get-FileHash -Algorithm SHA256 .\codex-web-gpt-6.1.5-Enhanced.2-PayOol.1-win-x64.exe
 ```
 
-Compare le résultat à la ligne correspondante dans `checksums.txt`. Il n'est pas nécessaire de désactiver la sécurité Windows pour utiliser cette distribution.
+Compare le résultat à la ligne correspondante dans `checksums.txt`. Cette préversion n'est pas signée avec un certificat de publication Windows. Smart App Control peut donc bloquer son exécution sur certains ordinateurs, y compris celui utilisé pour préparer cette version. Une empreinte correcte ne remplace pas une signature. Si Windows la bloque, conserve ton installation actuelle et attends une distribution signée ; ne désactive pas les protections Windows.

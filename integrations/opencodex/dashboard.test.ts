@@ -1,8 +1,24 @@
 import { test,expect } from 'bun:test';
-import { mkdtempSync,writeFileSync } from 'node:fs';
+import { mkdtempSync,writeFileSync,rmSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { startDashboard } from './dashboard';
+
+test('the auxiliary dashboard does not keep a stopped owner process alive',async()=>{
+ const root=mkdtempSync(join(tmpdir(),'opencodex-owner-exit-'));
+ writeFileSync(join(root,'manager.cjs'),'module.exports={};');
+ writeFileSync(join(root,'settings.json'),JSON.stringify({port:1,dashboardPort:0}));
+ const entry=join(root,'owner.ts');
+ writeFileSync(entry,`import { startDashboard } from ${JSON.stringify(pathToFileURL(join(import.meta.dir,'dashboard.ts')).href)}; startDashboard(${JSON.stringify(root)},fetch); console.log('DASHBOARD_READY');`);
+ const child=Bun.spawn([process.execPath,entry],{stdout:'pipe',stderr:'pipe'});
+ let timer:ReturnType<typeof setTimeout>|undefined;
+ try{
+  const code=await Promise.race([child.exited,new Promise(resolve=>{timer=setTimeout(()=>resolve('timeout'),3000);})]);
+  expect(code).toBe(0);
+  expect(await new Response(child.stdout).text()).toContain('DASHBOARD_READY');
+ }finally{clearTimeout(timer);if(child.exitCode===null){child.kill();await child.exited;}rmSync(root,{recursive:true,force:true});}
+});
 test('official WebSocket features keep authentication, messages, and closure through the dashboard gateway',async()=>{
  const root=mkdtempSync(join(tmpdir(),'opencodex-gateway-test-'));
  writeFileSync(join(root,'manager.cjs'),'module.exports={};');
