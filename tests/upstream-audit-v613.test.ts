@@ -43,8 +43,9 @@ const ledger = JSON.parse(readFileSync(
 };
 
 function git(args: string[], cwd = root): string {
-  const result = spawnSync("git", args, { cwd, encoding: "utf8" });
-  if (result.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.stderr}`);
+  // Retained upstream history can exceed spawnSync's default 1 MiB buffer.
+  const result = spawnSync("git", args, { cwd, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.error?.message || result.stderr || `exit ${result.status}, signal ${result.signal}`}`);
   return result.stdout.trim();
 }
 
@@ -209,7 +210,7 @@ test.each(["v6.1.4", "v6.1.5", "v6.1.7", "v6.1.8"])("continuing %s evidence clos
   }
   const digest = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex");
   const publishedObjects = release === "v6.1.7" || release === "v6.1.8"
-    ? new Set(git(["rev-list", "--objects", "HEAD"]).split(/\r?\n/).map(line => line.split(" ")[0])) : undefined;
+    ? new Set(git(["rev-list", "--objects", "--no-object-names", "HEAD"]).split(/\r?\n/)) : undefined;
   const retainedTargets = new Map<string, Buffer>();
   if (next.evidence.targetBlobs) {
     const retained = next.evidence.targetBlobs;
