@@ -6,10 +6,10 @@ Codex connects to Codex Web GPT. ChatGPT Web models keep their existing model, e
 
 ## Installer / Installation
 
-**Windows 11 x64 — release `6.1.7-Enhanced.1-Integrated.1` (Latest).**
+**Windows 11 x64 — release `6.1.8-Enhanced.1-Integrated.1` (Latest).**
 
-- [Download the Windows installer](https://github.com/PayOol/codex-chatgpt-web/releases/download/v6.1.7-Enhanced.1-Integrated.1/codex-web-gpt-6.1.7-Enhanced.1-Integrated.1-win-x64.exe)
-- [Release notes, checksums and validation limits](https://github.com/PayOol/codex-chatgpt-web/releases/tag/v6.1.7-Enhanced.1-Integrated.1)
+- [Download the Windows installer](https://github.com/PayOol/codex-chatgpt-web/releases/download/v6.1.8-Enhanced.1-Integrated.1/codex-web-gpt-6.1.8-Enhanced.1-Integrated.1-win-x64.exe)
+- [Release notes, checksums and validation limits](https://github.com/PayOol/codex-chatgpt-web/releases/tag/v6.1.8-Enhanced.1-Integrated.1)
 - [Guide français](docs/INSTALL.fr.md)
 
 1. Run the installer and open **Codex Web GPT** from the Start menu.
@@ -42,7 +42,7 @@ Before publishing a release, run the focused integration tests, `bun run verify:
 
 ## Updating and existing installations
 
-This fork's launcher update checks use **PayOol/codex-chatgpt-web**. They do not silently replace it with an upstream installer. Release `6.1.7-Enhanced.1-Integrated.1` is designated **Latest** and is available through GitHub's stable release endpoint. Any releases marked as previews still require explicit installation. The validation scope and limits remain documented in the release notes.
+This fork's launcher update checks use **PayOol/codex-chatgpt-web**. They do not silently replace it with an upstream installer. Release `6.1.8-Enhanced.1-Integrated.1` is designated **Latest** and is available through GitHub's stable release endpoint. Any releases marked as previews still require explicit installation. The validation scope and limits remain documented in the release notes.
 
 OpenCodex updates still come from the official npm package and are managed independently. Providers and credentials live outside versioned program files. A launcher upgrade preserves an independently updated OpenCodex version and existing settings. Close the previous launcher normally, after tasks finish, before switching installations; two launchers must not own the same profile simultaneously.
 
