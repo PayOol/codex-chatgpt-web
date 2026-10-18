@@ -6,6 +6,17 @@ const os = require('node:os');
 const { files, provision, verifyPayload, safePath } = require('./distribution.cjs');
 const { walk } = require('./build-distribution.cjs');
 
+test('packaging rejects zero-filled dependency source before creating its manifest', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'opencodex-corrupt-dependency-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const dependency = path.join(root, 'index.js');
+  fs.writeFileSync(dependency, Buffer.alloc(92));
+  assert.throws(() => walk(root), /Corrupt distribution source.*index\.js/);
+  fs.writeFileSync(dependency, 'export const available = true;\n');
+  fs.writeFileSync(path.join(root, 'empty.js'), '');
+  assert.equal(walk(root).length, 2);
+});
+
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'opencodex-distribution-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));

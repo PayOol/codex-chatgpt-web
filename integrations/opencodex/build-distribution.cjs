@@ -36,7 +36,13 @@ function walk(root, prefix = '') {
   for (const entry of fs.readdirSync(path.join(root, prefix), { withFileTypes: true })) {
     const relative = prefix ? prefix + '/' + entry.name : entry.name;
     if (entry.isDirectory()) result.push(...walk(root, relative));
-    else if (entry.isFile()) result.push({ path: relative, sha256: hash(path.join(root, relative)) });
+    else if (entry.isFile()) {
+      const bytes = fs.readFileSync(path.join(root, relative));
+      if (/\.(?:[cm]?js|[cm]?ts|json)$/i.test(relative) && bytes.length && bytes.every(byte => byte === 0)) {
+        throw Error('Corrupt distribution source (all NUL bytes): ' + relative);
+      }
+      result.push({ path: relative, sha256: crypto.createHash('sha256').update(bytes).digest('hex') });
+    }
     else throw Error('Distribution cannot contain a link: ' + relative);
   }
   return result.sort((a, b) => a.path.localeCompare(b.path, 'en'));
