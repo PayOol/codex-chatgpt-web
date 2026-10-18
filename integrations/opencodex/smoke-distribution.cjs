@@ -125,6 +125,20 @@ async function main() {
     fs.mkdirSync(path.dirname(reportFile), { recursive: true });
     fs.writeFileSync(reportFile, JSON.stringify(report, null, 2) + '\n');
     console.log('PAYOOL_CLEAN_PROFILE_OK ' + JSON.stringify(report));
+  } catch (error) {
+    // Keep bounded startup evidence from this disposable, account-free profile
+    // before cleanup removes it. Never inspect the user's active integration.
+    const checks = path.join(coreHome, 'integrations/opencodex/checks');
+    if (fs.existsSync(checks)) {
+      for (const entry of fs.readdirSync(checks, { withFileTypes: true }).filter(entry => entry.isDirectory()).slice(-3)) {
+        const log = path.join(checks, entry.name, 'backend.log');
+        if (fs.existsSync(log)) {
+          const tail = fs.readFileSync(log, 'utf8').slice(-6000).replace(/Bearer\s+\S+/g, 'Bearer [redacted]');
+          console.error('PACKAGE_SMOKE_ISOLATED_BACKEND_LOG ' + tail);
+        }
+      }
+    }
+    throw error;
   } finally {
     // mkdtemp gives this process sole ownership; the current installation and
     // its processes are never selected by name or traversed for cleanup.
