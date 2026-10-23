@@ -162,6 +162,7 @@ async function ensureWithinDeadline(
   signal: AbortSignal,
   captureDiagnostic?: (checkpoint: string) => Promise<void>,
   proveConnectorAccess?: (signal: AbortSignal) => Promise<boolean>,
+  recoverOwnedPersonalization?: () => Promise<boolean>,
 ): Promise<ChatGptPersonalizationPreflight> {
   const capture = async (checkpoint: string) => {
     if (captureDiagnostic) await runChatGptMutationStep(() => captureDiagnostic(checkpoint), deadline, signal);
@@ -177,10 +178,21 @@ async function ensureWithinDeadline(
     await waitForChatGptMutationPoll(UI_SETTLE_MS, signal);
     personalizedCount = await runChatGptMutationStep(() => personalized.count(), deadline, signal);
     unpersonalizedCount = await runChatGptMutationStep(() => unpersonalized.count(), deadline, signal);
+    if (personalizedCount === 0 && unpersonalizedCount === 0 && recoverOwnedPersonalization
+      && await runChatGptOwnedMutationStep(recoverOwnedPersonalization, deadline, signal)) {
+      await capture("personalization-owned-experiment-enabled");
+      await waitForChatGptMutationPoll(UI_SETTLE_MS, signal);
+      personalizedCount = await runChatGptMutationStep(() => personalized.count(), deadline, signal);
+      unpersonalizedCount = await runChatGptMutationStep(() => unpersonalized.count(), deadline, signal);
+    }
     if (personalizedCount === 0 && unpersonalizedCount === 0) {
       if (await prove()) {
         await capture("personalization-already-enabled");
         return "already-personalized";
+      }
+      if (await runChatGptMutationStep(() => page.locator(CONTROL_SELECTOR).filter({ visible: true }).count(), deadline, signal) === 0) {
+        await capture("personalization-control-unavailable");
+        throw unavailable("ChatGPT did not expose a personalization control or the configured connector in this Temporary Chat. Check that the connector is available in ChatGPT Plugins before retrying.");
       }
       await capture("personalization-unpersonalized");
       const receipt = await toggleChoice(page, deadline, signal);
@@ -244,6 +256,7 @@ export async function ensureChatGptPersonalizedConnectorAccess(
   captureDiagnostic?: (checkpoint: string) => Promise<void>,
   proveConnectorAccess?: (signal: AbortSignal) => Promise<boolean>,
   abortSignal?: AbortSignal,
+  recoverOwnedPersonalization?: () => Promise<boolean>,
 ): Promise<ChatGptPersonalizationPreflight> {
   const deadline = Date.now() + PREFLIGHT_TIMEOUT_MS;
   const deadlineController = new AbortController();
@@ -253,7 +266,7 @@ export async function ensureChatGptPersonalizedConnectorAccess(
     ? AbortSignal.any([abortSignal, deadlineController.signal])
     : deadlineController.signal;
   try {
-    return await ensureWithinDeadline(page, deadline, signal, captureDiagnostic, proveConnectorAccess);
+    return await ensureWithinDeadline(page, deadline, signal, captureDiagnostic, proveConnectorAccess, recoverOwnedPersonalization);
   } catch (error) {
     if (error instanceof ChatGptPersistentBrowserStateError) throw error;
     if (!abortSignal?.aborted && (

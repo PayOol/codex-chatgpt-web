@@ -234,6 +234,7 @@ import {
   settleAbortedChatGptMutation,
 } from "../../browser-mutation";
 import { ensureChatGptPersonalizedConnectorAccess } from "./personalization";
+import { registerOwnedChatGptWorkPage, recoverOwnedTemporaryPersonalization } from "./owned-personalization";
 import { verifyCurrentConnectorContract } from "./connector-contract";
 
 export { MAX_CHATGPT_BROWSER_TABS } from "./concurrency";
@@ -1476,6 +1477,7 @@ export class ChatGptBrowserWorker {
       descriptorPath: this.config.browserHostDescriptorPath!, connectorIdentity: this.config.appName,
       prefix: ` ${prefix}`,
       prepare: async (page, signal) => {
+        registerOwnedChatGptWorkPage(page);
         await this.prepareChatSurface(page, undefined, this.config.useSavedChats);
         signal.throwIfAborted();
         const mode = await this.selectModelAndEffort(page, modelId, reasoning, capabilities,
@@ -2821,6 +2823,7 @@ export class ChatGptBrowserWorker {
       captureDiagnostic,
       proveConnectorAccess,
       signal,
+      () => recoverOwnedTemporaryPersonalization(page),
     );
   }
 
@@ -3341,6 +3344,9 @@ export class ChatGptBrowserWorker {
     try {
       await captureDiagnostic("connector-verification-started");
       await this.prepareChatSurface(page, captureDiagnostic);
+      // The launcher grants this helper exclusive use of its verification page.
+      // Include maintenance verification in the same recovery as leased work pages.
+      registerOwnedChatGptWorkPage(page);
       // The launcher refreshes its owned ChatGPT document before starting this helper. A second
       // reload here can discard the first catalog's exact mismatch evidence and report a generic
       // menu failure instead of identifying the connector the account actually exposes.
@@ -4571,6 +4577,7 @@ export class ChatGptBrowserWorker {
         return connection.page;
       });
       if (!maintenancePage && !launcherSurfaceId) managedPage = page;
+      if (launcherSurfaceId || managedPage) registerOwnedChatGptWorkPage(page);
       diagnosticPage = page;
       const rebindLauncherPage = async (
         attempt: number, cause: Error, callerSignal?: AbortSignal, episodeRemainingMs?: () => number,
@@ -4627,6 +4634,7 @@ export class ChatGptBrowserWorker {
             });
             checkCurrent();
             page = connection.page;
+            registerOwnedChatGptWorkPage(page);
             diagnosticPage = page;
           }, rebindSignal);
           check();
